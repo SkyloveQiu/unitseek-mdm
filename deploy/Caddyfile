@@ -1,0 +1,34 @@
+{
+    email {$ACME_EMAIL}
+}
+
+{$EASY_MDM_DOMAIN} {
+    encode zstd gzip
+
+    root * /opt/easy-mdm/frontend/dist
+
+    header {
+        -Server
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "same-origin"
+    }
+
+    # Keep the proxy handlers ahead of the SPA fallback. `route` preserves this
+    # written order, whereas Caddy otherwise sorts `try_files` before proxies.
+    route {
+        @api path /api/*
+        reverse_proxy @api 127.0.0.1:8003
+
+        @health path /health /health/*
+        reverse_proxy @health 127.0.0.1:8003
+
+        try_files {path} /index.html
+        file_server
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}

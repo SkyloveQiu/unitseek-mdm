@@ -1,0 +1,27 @@
+[Unit]
+Description=Unitseek MDM API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=easy-mdm
+Group=easy-mdm
+WorkingDirectory=/opt/easy-mdm/backend
+EnvironmentFile=/etc/easy-mdm/easy-mdm.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=/opt/easy-mdm/.venv/bin/python -m app.scripts.bootstrap_mysql_schema
+ExecStartPre=/opt/easy-mdm/.venv/bin/alembic upgrade head
+ExecStart=/opt/easy-mdm/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8003
+Restart=always
+RestartSec=5
+TimeoutStartSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadOnlyPaths=/opt/easy-mdm /etc/easy-mdm
+
+[Install]
+WantedBy=multi-user.target

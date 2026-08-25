@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environments
+.env
+.env.production
+.env.local
+**/.env
+**/.env.production
+**/.env.local
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+test.db
+
+# GCP Credentials
+credentials/
+secrets/
+gcp-service-account*.json
+service-account*.json
+*-service-account.json
+*.pem
+*.key
+
+# Alembic
+backend/alembic/versions/__pycache__/
+
+# Logs
+*.log
+
+# Release artifacts (build these locally; do not publish archives or deployment bundles)
+*.tar.gz
+*.zip
+
+# Redis
+dump.rdb
