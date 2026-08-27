@@ -109,26 +109,31 @@ function englishFieldLabel(field: PolicyField): string {
 
 function englishOptionLabel(value: string): string {
   if (!value) return "Unspecified";
+  if (value === "SOMETHING") return "Any screen lock";
 
   if (/^\d+s$/.test(value)) {
     const seconds = Number(value.slice(0, -1));
-    if (seconds % 86400 === 0) return `${seconds / 86400} days`;
-    if (seconds % 3600 === 0) return `${seconds / 3600} hours`;
-    if (seconds % 60 === 0) return `${seconds / 60} minutes`;
-    return `${seconds} seconds`;
+    if (seconds % 86400 === 0) return formatQuantity(seconds / 86400, "day");
+    if (seconds % 3600 === 0) return formatQuantity(seconds / 3600, "hour");
+    if (seconds % 60 === 0) return formatQuantity(seconds / 60, "minute");
+    return formatQuantity(seconds, "second");
   }
 
   if (/^\d+$/.test(value)) {
     const milliseconds = Number(value);
     if (milliseconds >= 1000 && milliseconds % 1000 === 0) {
       const seconds = milliseconds / 1000;
-      if (seconds % 60 === 0) return `${seconds / 60} minutes`;
-      return `${seconds} seconds`;
+      if (seconds % 60 === 0) return formatQuantity(seconds / 60, "minute");
+      return formatQuantity(seconds, "second");
     }
     return value;
   }
 
   return titleCase(value.replace(/_/g, " "));
+}
+
+function formatQuantity(value: number, unit: string): string {
+  return `${value} ${unit}${value === 1 ? "" : "s"}`;
 }
 
 function CategorySection({

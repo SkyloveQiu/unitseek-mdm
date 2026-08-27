@@ -201,7 +201,7 @@ function TokenCard({
                 className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-1"
               >
                 {showQr ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                {showQr ? "Nascondi" : "Mostra"}
+                {showQr ? "Hide" : "Show"}
               </button>
             </div>
             {showQr && (
@@ -221,7 +221,7 @@ function TokenCard({
         {enrollmentUrl && !isExpired && (
           <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-              Link Enrollment
+              Enrollment Link
             </p>
             <p className="text-xs text-gray-600 dark:text-gray-300 break-all font-mono">
               {enrollmentUrl}
@@ -245,7 +245,7 @@ function TokenCard({
         {!token.token_value && (
           <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Token non disponibile - Enterprise non collegata o errore API Google
+              Token unavailable — Android Enterprise is not linked or the Google API returned an error.
             </p>
           </div>
         )}
