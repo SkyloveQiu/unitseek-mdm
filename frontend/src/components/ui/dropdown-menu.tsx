@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface DropdownMenuProps {
@@ -8,18 +9,21 @@ interface DropdownMenuProps {
 interface DropdownContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
+  triggerRef: React.MutableRefObject<HTMLElement | null>;
 }
 
 const DropdownContext = React.createContext<DropdownContextValue>({
   open: false,
   setOpen: () => {},
+  triggerRef: { current: null },
 });
 
 function DropdownMenu({ children }: DropdownMenuProps) {
   const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
 
   return (
-    <DropdownContext.Provider value={{ open, setOpen }}>
+    <DropdownContext.Provider value={{ open, setOpen, triggerRef }}>
       <div className="relative inline-block text-left">{children}</div>
     </DropdownContext.Provider>
   );
@@ -32,16 +36,26 @@ function DropdownMenuTrigger({
   children: React.ReactNode;
   asChild?: boolean;
 }) {
-  const { open, setOpen } = React.useContext(DropdownContext);
+  const { open, setOpen, triggerRef } = React.useContext(DropdownContext);
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<{ onClick?: () => void }>, {
-      onClick: () => setOpen(!open),
-    });
+    return (
+      <span ref={(element) => { triggerRef.current = element; }} className="inline-flex">
+        {React.cloneElement(children as React.ReactElement<{ onClick?: () => void }>, {
+          onClick: () => setOpen(!open),
+        })}
+      </span>
+    );
   }
 
   return (
-    <button type="button" onClick={() => setOpen(!open)}>
+    <button
+      ref={(element) => { triggerRef.current = element; }}
+      type="button"
+      onClick={() => setOpen(!open)}
+      aria-expanded={open}
+      aria-haspopup="menu"
+    >
       {children}
     </button>
   );
@@ -56,12 +70,24 @@ function DropdownMenuContent({
   className?: string;
   align?: "start" | "end";
 }) {
-  const { open, setOpen } = React.useContext(DropdownContext);
+  const { open, setOpen, triggerRef } = React.useContext(DropdownContext);
   const ref = React.useRef<HTMLDivElement>(null);
+  const [position, setPosition] = React.useState<{ top: number; left: number } | null>(null);
+
+  const updatePosition = React.useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      left: align === "end" ? rect.right : rect.left,
+    });
+  }, [align, triggerRef]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.parentElement?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (!ref.current?.contains(target) && !triggerRef.current?.contains(target)) {
         setOpen(false);
       }
     };
@@ -69,21 +95,42 @@ function DropdownMenuContent({
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open, setOpen]);
+  }, [open, setOpen, triggerRef]);
+
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null);
+      return;
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       ref={ref}
       className={cn(
-        "absolute z-50 mt-2 min-w-[8rem] rounded-md border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800",
-        align === "end" ? "right-0" : "left-0",
+        "fixed z-[100] min-w-[8rem] rounded-md border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800",
         className
       )}
+      style={position ? {
+        top: position.top,
+        left: position.left,
+        transform: align === "end" ? "translateX(-100%)" : undefined,
+      } : { visibility: "hidden" }}
+      role="menu"
     >
       {children}
-    </div>
+    </div>,
+    document.body
   );
 }
 
