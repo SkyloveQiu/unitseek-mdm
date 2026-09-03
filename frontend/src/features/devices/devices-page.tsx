@@ -5,7 +5,6 @@ import {
   Search,
   MoreHorizontal,
   Eye,
-  Pencil,
   Lock,
   RotateCcw,
   Trash2,
@@ -345,7 +344,12 @@ export function DevicesPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg focus-visible:ring-2 focus-visible:ring-offset-1"
+                          aria-label="Device actions"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -353,12 +357,8 @@ export function DevicesPage() {
                         <DropdownMenuItem
                           onClick={() => handleViewDevice(device)}
                         >
-                          <Eye className="h-4 w-4 mr-2" />
+                          <Eye className="h-4 w-4 shrink-0" />
                           {t("devViewDetails")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {}}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          {t("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -366,7 +366,7 @@ export function DevicesPage() {
                             handleDeviceAction(String(device.id), "lock")
                           }
                         >
-                          <Lock className="h-4 w-4 mr-2" />
+                          <Lock className="h-4 w-4 shrink-0" />
                           {t("devLock")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -374,7 +374,7 @@ export function DevicesPage() {
                             handleDeviceAction(String(device.id), "reboot")
                           }
                         >
-                          <RotateCcw className="h-4 w-4 mr-2" />
+                          <RotateCcw className="h-4 w-4 shrink-0" />
                           {t("devReboot")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -384,7 +384,7 @@ export function DevicesPage() {
                             handleDeviceAction(String(device.id), "wipe")
                           }
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-4 w-4 shrink-0" />
                           {t("devWipeDevice")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>

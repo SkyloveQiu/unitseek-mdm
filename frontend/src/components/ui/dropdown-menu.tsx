@@ -118,7 +118,7 @@ function DropdownMenuContent({
     <div
       ref={ref}
       className={cn(
-        "fixed z-[100] min-w-[8rem] rounded-md border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800",
+        "fixed z-[100] min-w-[11rem] rounded-lg border border-gray-200 bg-white p-1.5 shadow-xl shadow-gray-900/10 dark:border-gray-700 dark:bg-gray-800",
         className
       )}
       style={position ? {
@@ -151,7 +151,7 @@ function DropdownMenuItem({
     <button
       type="button"
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700",
+        "relative flex w-full cursor-pointer select-none items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium leading-5 outline-none transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700",
         destructive && "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30",
         className
       )}
@@ -166,7 +166,7 @@ function DropdownMenuItem({
 }
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <div className={cn("-mx-1 my-1 h-px bg-gray-200 dark:bg-gray-700", className)} />;
+  return <div className={cn("-mx-0.5 my-1 h-px bg-gray-200 dark:bg-gray-700", className)} />;
 }
 
 function DropdownMenuLabel({
