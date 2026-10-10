@@ -150,7 +150,11 @@ async def update_device(
             detail="Device not found",
         )
 
-    if update_data.display_name is not None:
+    display_name_changed = (
+        "display_name" in update_data.model_fields_set
+        and update_data.display_name != device.display_name
+    )
+    if display_name_changed:
         device.display_name = update_data.display_name
 
     previous_group_id = device.group_id
@@ -231,7 +235,7 @@ async def update_device(
             resource_id=device.id,
             details={"from_group_id": previous_group_id, "to_group_id": device.group_id},
         )
-    elif update_data.display_name is not None:
+    if display_name_changed:
         await record_audit_event(
             db,
             tenant_id=current_user.tenant_id,

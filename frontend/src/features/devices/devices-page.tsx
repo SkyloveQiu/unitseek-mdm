@@ -5,6 +5,7 @@ import {
   Search,
   MoreHorizontal,
   Eye,
+  Pencil,
   Lock,
   RotateCcw,
   Trash2,
@@ -123,6 +124,7 @@ export function DevicesPage() {
   const [page, setPage] = useState(1);
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [focusName, setFocusName] = useState(false);
 
   const { data, isLoading, isError } = useQuery<DevicesResponse>({
     queryKey: ["devices", page, search, stateFilter, complianceFilter],
@@ -149,13 +151,23 @@ export function DevicesPage() {
     return devices;
   }, [devices, search, stateFilter, complianceFilter]);
 
-  const handleViewDevice = (device: Device) => {
+  const handleViewDevice = (device: Device, rename = false) => {
     const deviceInfo: DeviceInfo = {
       ...device,
       hardware_info: undefined,
     };
     setSelectedDevice(deviceInfo);
+    setFocusName(rename);
     setDetailOpen(true);
+  };
+
+  // Keep the open detail dialog in step with the saved server state.
+  const syncSelectedDevice = (updated: Device) => {
+    setSelectedDevice((current) =>
+      current && Number(current.id) === updated.id
+        ? { ...updated, hardware_info: undefined }
+        : current
+    );
   };
 
   const actionMutation = useMutation({
@@ -196,13 +208,24 @@ export function DevicesPage() {
   };
   const moveGroupMutation = useMutation({
     mutationFn: ({ deviceId, groupId }: { deviceId: number; groupId: number | null }) =>
-      apiPut(`/devices/${deviceId}`, { group_id: groupId }),
-    onSuccess: () => {
+      apiPut<Device>(`/devices/${deviceId}`, { group_id: groupId }),
+    onSuccess: (updated) => {
+      syncSelectedDevice(updated);
       queryClient.invalidateQueries({ queryKey: ["devices"] });
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       toast("success", "Device group updated.");
     },
     onError: () => toast("error", "Could not move the device to that group."),
+  });
+  const renameMutation = useMutation({
+    mutationFn: ({ deviceId, displayName }: { deviceId: number; displayName: string }) =>
+      apiPut<Device>(`/devices/${deviceId}`, { display_name: displayName }),
+    onSuccess: (updated) => {
+      syncSelectedDevice(updated);
+      queryClient.invalidateQueries({ queryKey: ["devices"] });
+      toast("success", t("devRenamed"));
+    },
+    onError: () => toast("error", t("devRenameFailed")),
   });
 
   return (
@@ -360,6 +383,12 @@ export function DevicesPage() {
                           <Eye className="h-4 w-4 shrink-0" />
                           {t("devViewDetails")}
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleViewDevice(device, true)}
+                        >
+                          <Pencil className="h-4 w-4 shrink-0" />
+                          {t("devRename")}
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() =>
@@ -435,6 +464,9 @@ export function DevicesPage() {
         onAction={handleDeviceAction}
         groups={groups}
         onMoveGroup={(deviceId, groupId) => moveGroupMutation.mutate({ deviceId: Number(deviceId), groupId })}
+        onRename={(deviceId, displayName) => renameMutation.mutate({ deviceId: Number(deviceId), displayName })}
+        renaming={renameMutation.isPending}
+        focusName={focusName}
       />
     </div>
   );

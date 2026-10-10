@@ -135,8 +135,15 @@ export const en = {
   devWipeDevice: "Wipe Device",
   devResetPassword: "Reset Password",
   devActionSent: "Action \"{action}\" sent to device {deviceId}",
+  devRename: "Rename",
+  devRenamed: "Device name updated.",
+  devRenameFailed: "Could not rename the device.",
 
   // Device detail
+  devDeviceName: "Device name",
+  devDeviceNamePlaceholder: "e.g. Warehouse scanner 01",
+  devDeviceNameHint: "Leave blank to show the Google device ID instead.",
+  devSaveName: "Save",
   devSerialNumber: "Serial Number",
   devIMEI: "IMEI",
   devOSVersion: "OS Version",

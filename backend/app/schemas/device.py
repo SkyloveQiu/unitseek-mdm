@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class DeviceOut(BaseModel):
@@ -39,6 +39,15 @@ class DeviceOut(BaseModel):
 class DeviceUpdate(BaseModel):
     display_name: Optional[str] = Field(None, max_length=255)
     group_id: Optional[int] = None
+
+    @field_validator("display_name")
+    @classmethod
+    def normalize_display_name(cls, value: Optional[str]) -> Optional[str]:
+        # A blank name clears the friendly name so the console falls back to
+        # the Google device identifier instead of rendering an empty label.
+        if value is None:
+            return None
+        return value.strip() or None
 
 
 class DeviceListOut(BaseModel):

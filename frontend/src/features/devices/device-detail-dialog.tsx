@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { formatDateTime } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 
@@ -55,6 +56,9 @@ interface DeviceDetailDialogProps {
   onAction: (deviceId: string, action: string) => void;
   groups: Array<{ id: number; name: string }>;
   onMoveGroup: (deviceId: string, groupId: number | null) => void;
+  onRename: (deviceId: string, displayName: string) => void;
+  renaming?: boolean;
+  focusName?: boolean;
 }
 
 function getStateBadgeVariant(state: string) {
@@ -90,16 +94,26 @@ export function DeviceDetailDialog({
   onAction,
   groups,
   onMoveGroup,
+  onRename,
+  renaming = false,
+  focusName = false,
 }: DeviceDetailDialogProps) {
   const { t } = useLanguage();
   const [showHardware, setShowHardware] = useState(false);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState("");
 
   useEffect(() => {
     setConfirmAction(null);
   }, [device?.id]);
 
+  useEffect(() => {
+    setNameDraft(device?.display_name ?? "");
+  }, [device?.id, device?.display_name, open]);
+
   if (!device) return null;
+
+  const nameUnchanged = nameDraft.trim() === (device.display_name ?? "");
 
   const handleAction = (action: string) => {
     if (action === "wipe") {
@@ -128,6 +142,33 @@ export function DeviceDetailDialog({
           </DialogHeader>
 
           <div className="space-y-5">
+            <form
+              className="rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!nameUnchanged) onRename(String(device.id), nameDraft.trim());
+              }}
+            >
+              <label htmlFor="device-display-name" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                {t("devDeviceName")}
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  id="device-display-name"
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  placeholder={t("devDeviceNamePlaceholder")}
+                  maxLength={255}
+                  autoFocus={focusName}
+                  className="h-9"
+                />
+                <Button type="submit" size="sm" className="h-9 shrink-0" disabled={renaming || nameUnchanged}>
+                  {t("devSaveName")}
+                </Button>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{t("devDeviceNameHint")}</p>
+            </form>
+
             {/* Status row */}
             <div className="flex items-center gap-3">
               <Badge variant={getStateBadgeVariant(device.state)}>

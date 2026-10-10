@@ -83,3 +83,52 @@ async def test_group_move_assigns_its_default_policy_and_writes_audit_event():
     assert updated.policy_id == 3
     assert group.device_count == 1
     assert any(getattr(item, "action", None) == "device.group_moved" for item in session.added)
+
+
+@pytest.mark.asyncio
+async def test_rename_sets_trimmed_display_name_and_writes_audit_event():
+    device = Device(id=10, tenant_id=1, state="active")
+    session = _Session([device])
+
+    updated = await update_device(
+        device_id=10,
+        update_data=DeviceUpdate(display_name="  Warehouse scanner 01  "),
+        current_user=_user(),
+        db=session,
+    )
+
+    assert updated.display_name == "Warehouse scanner 01"
+    assert updated.group_id is None
+    assert any(getattr(item, "action", None) == "device.updated" for item in session.added)
+
+
+@pytest.mark.asyncio
+async def test_blank_rename_clears_display_name():
+    device = Device(id=10, tenant_id=1, state="active", display_name="Old name")
+    session = _Session([device])
+
+    updated = await update_device(
+        device_id=10,
+        update_data=DeviceUpdate(display_name="   "),
+        current_user=_user(),
+        db=session,
+    )
+
+    assert updated.display_name is None
+    assert any(getattr(item, "action", None) == "device.updated" for item in session.added)
+
+
+@pytest.mark.asyncio
+async def test_group_move_without_display_name_keeps_existing_name():
+    device = Device(id=10, tenant_id=1, state="active", display_name="Front desk")
+    session = _Session([device])
+
+    updated = await update_device(
+        device_id=10,
+        update_data=DeviceUpdate(group_id=None),
+        current_user=_user(),
+        db=session,
+    )
+
+    assert updated.display_name == "Front desk"
+    assert not any(getattr(item, "action", None) == "device.updated" for item in session.added)
