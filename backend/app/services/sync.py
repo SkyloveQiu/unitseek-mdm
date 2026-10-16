@@ -36,9 +36,21 @@ def _parse_google_time(value: Any) -> datetime | None:
     if not isinstance(value, str) or not value:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return _as_utc(datetime.fromisoformat(value.replace("Z", "+00:00")))
     except ValueError:
         return None
+
+
+def _as_utc(value: datetime) -> datetime:
+    """Return an aware UTC datetime.
+
+    MySQL DATETIME columns drop tzinfo, so values reloaded from the database are
+    naive while values set during this sync are aware. Everything is written in
+    UTC, so a naive value is UTC wall-clock time.
+    """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 def _application_reports(reports: Any) -> dict[str, Any]:
@@ -185,7 +197,7 @@ class AndroidManagementSyncService:
         for app in apps:
             reported_versions = [
                 (
-                    device.last_reported_at or device.last_sync_at or datetime.min.replace(tzinfo=timezone.utc),
+                    _as_utc(device.last_reported_at or device.last_sync_at or datetime.min),
                     report.get("versionName"),
                 )
                 for device in devices

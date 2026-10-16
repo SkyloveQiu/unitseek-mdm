@@ -143,3 +143,32 @@ async def test_managed_app_version_uses_the_most_recent_device_report():
     )
 
     assert app.last_known_version == "1.10"
+
+
+@pytest.mark.asyncio
+async def test_managed_app_version_compares_mysql_naive_and_synced_aware_times():
+    # MySQL returns naive datetimes for devices this sync did not refresh,
+    # while refreshed devices carry aware UTC times. Mixing them used to raise
+    # "can't compare offset-naive and offset-aware datetimes" and abort sync.
+    app = ManagedApplication(id=1, tenant_id=1, package_name="com.company.control")
+    stale_device = Device(
+        tenant_id=1,
+        last_reported_at=datetime(2026, 10, 10, 13, 0),
+        application_reports={"com.company.control": {"versionName": "1.0.3"}},
+    )
+    refreshed_device = Device(
+        tenant_id=1,
+        last_reported_at=datetime(2026, 10, 16, 15, 0, tzinfo=timezone.utc),
+        application_reports={"com.company.control": {"versionName": "1.0.4"}},
+    )
+    unreported_device = Device(
+        tenant_id=1,
+        application_reports={"com.company.control": {"versionName": "1.0.1"}},
+    )
+    db = _Session([[app], [stale_device, refreshed_device, unreported_device]])
+
+    await AndroidManagementSyncService(_AMAPI())._update_managed_app_versions(
+        db, tenant_id=1, now=datetime(2026, 10, 16, 15, 30, tzinfo=timezone.utc)
+    )
+
+    assert app.last_known_version == "1.0.4"
